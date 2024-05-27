@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM golang:1.19
+RUN apt update
+RUN apt install usbutils usb-modeswitch -y 
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download

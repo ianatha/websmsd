@@ -14,6 +14,7 @@ type OutgoingSMS struct {
 }
 
 func main() {
+	// 51  usb_modeswitch -v 0x12d1 -p 0x1f01 -V 0x12d1 -P 0x1001 -M "55534243000000000000000000000611060000000000000000000000000000"
 	modem := modem.New("/dev/ttyUSB0", 115200)
 	err := modem.Connect()
 	if err != nil {
