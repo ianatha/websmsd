@@ -11,8 +11,6 @@ import (
 	"github.com/tarm/serial"
 )
 
-const RESPONSE_TIMEOUT = 5000
-
 type GSMModem struct {
 	ComPort  string
 	BaudRate int
@@ -43,7 +41,7 @@ func (m *GSMModem) initModem() {
 	m.SendCommand("AT+CMGF=1\r\n", true) // switch to TEXT mode
 }
 
-func (m *GSMModem) Expect(possibilities []string, timeoutMs int) (string, error) {
+func (m *GSMModem) Expect(possibilities []string) (string, error) {
 	readMax := 0
 	for _, possibility := range possibilities {
 		length := len(possibility)
@@ -57,7 +55,7 @@ func (m *GSMModem) Expect(possibilities []string, timeoutMs int) (string, error)
 	var status string = ""
 	buf := make([]byte, readMax)
 
-	timeout := time.After(time.Duration(timeoutMs) * time.Millisecond)
+	timeout := time.After(2 * time.Second)
 	tick := time.NewTicker(10 * time.Millisecond)
 
 	for {
@@ -107,7 +105,7 @@ func (m *GSMModem) Read(n int) string {
 	return output
 }
 
-func (m *GSMModem) ReadUntil(terminator string, timeoutMs int) (string, error) {
+func (m *GSMModem) ReadUntil(terminator string) (string, error) {
 	log.Printf("Reading until %s\n", terminator)
 	var output string = "";
 	terminate := false
@@ -141,7 +139,7 @@ func (m *GSMModem) SendCommand(command string, waitForOk bool) string {
 	m.Send(command)
 
 	if waitForOk {
-		output, err := m.Expect([]string{"OK\r\n", "ERROR\r\n"}, RESPONSE_TIMEOUT) // we will not change api so errors are ignored for now
+		output, err := m.Expect([]string{"OK\r\n", "ERROR\r\n"}) // we will not change api so errors are ignored for now
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -156,7 +154,7 @@ const CTRL_Z = string(rune(26))
 func (m *GSMModem) SMSSend(mobile string, message string) error {
 	log.Printf("Sending SMS to %s\n", mobile)
 	m.Send("AT+CMGS=\""+mobile+"\"\r")
-	m.Expect([]string{"> "}, RESPONSE_TIMEOUT)
+	m.Expect([]string{"> "})
 
 	// EOM CTRL-Z
 	res := m.SendCommand(message+CTRL_Z, true)
@@ -207,7 +205,7 @@ func parseSMS(input string) []SMS {
 
 func (m *GSMModem) Stats(ctx context.Context) string {
 	m.Send("AT+CSQ\r\n")
-	s, err := m.ReadUntil("OK\r\n", RESPONSE_TIMEOUT)
+	s, err := m.ReadUntil("OK\r\n")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -219,7 +217,7 @@ func (m *GSMModem) Stats(ctx context.Context) string {
 func (m *GSMModem) SMSReadAll(ctx context.Context, q string) ([]SMS, error) {
 	log.Printf("Reading all SMS\n")
 	m.Send(fmt.Sprintf("AT+CMGL=\"%s\"\r\n", q))
-	s, err := m.ReadUntil("OK\r\n", RESPONSE_TIMEOUT)
+	s, err := m.ReadUntil("OK\r\n")
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +229,7 @@ func (m *GSMModem) SMSReadAll(ctx context.Context, q string) ([]SMS, error) {
 func (m *GSMModem) SMSDelete(index int) error {
 	log.Printf("Deleting SMS %d\n", index)
 	m.Send(fmt.Sprintf("AT+CMGD=%d\r\n", index))
-	output, err := m.Expect([]string{"OK\r\n", "ERROR\r\n"}, RESPONSE_TIMEOUT)
+	output, err := m.Expect([]string{"OK\r\n", "ERROR\r\n"})
 	if err != nil {
 		return err
 	}
