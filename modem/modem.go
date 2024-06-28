@@ -34,8 +34,6 @@ func (m *GSMModem) Connect() (err error) {
 }
 
 func (m *GSMModem) initModem() {
-	m.SendCommand("AT+CFUN=0\r\n", false) // turn off
-	m.SendCommand("AT+CFUN=1\r\n", true) // turn on
 	m.SendCommand("ATE0\r\n", true) // echo off
 	m.SendCommand("AT+CPMS=\"MT\",\"MT\",\"MT\"\r\n", false) // set SMS storage
 	m.SendCommand("AT+CMGF=1\r\n", true) // switch to TEXT mode
@@ -206,6 +204,16 @@ func parseSMS(input string) []SMS {
 
 func (m *GSMModem) Stats(ctx context.Context) string {
 	m.Send("AT+CSQ\r\n")
+	s, err := m.ReadUntil("OK\r\n")
+	if err != nil {
+		log.Fatal(err)
+	}
+	m.Send("AT+CREG?\r\n")
+	s, err := m.ReadUntil("OK\r\n")
+	if err != nil {
+		log.Fatal(err)
+	}
+	m.Send("AT+CPMS=?\r\n")
 	s, err := m.ReadUntil("OK\r\n")
 	if err != nil {
 		log.Fatal(err)
