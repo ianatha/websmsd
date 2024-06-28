@@ -124,6 +124,7 @@ func (m *GSMModem) ReadUntil(terminator string) (string, error) {
 			if c > 0 {
 				output = output + string(buf[0])
 			}
+			log.Printf("Read: %q\n", output)
 			terminate = strings.HasSuffix(output, terminator)
 		}
 	}
