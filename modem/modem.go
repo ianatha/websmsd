@@ -39,6 +39,7 @@ func (m *GSMModem) initModem() {
 	m.SendCommand("AT+CFUN=0\r\n", false) // turn off
 	m.SendCommand("AT+CFUN=1\r\n", true) // turn on
 	m.SendCommand("ATE0\r\n", true) // echo off
+	m.SendCommand("AT+CPMS=\"MT\",\"MT\",\"MT\"\r\n", true) // set SMS storage
 	m.SendCommand("AT+CMGF=1\r\n", true) // switch to TEXT mode
 }
 
@@ -111,7 +112,7 @@ func (m *GSMModem) ReadUntil(terminator string, timeoutMs int) (string, error) {
 	var output string = "";
 	terminate := false
 	
-	timeout := time.After(time.Duration(timeoutMs) * time.Millisecond)
+	timeout := time.After(2 * time.Second)
 	tick := time.NewTicker(10 * time.Millisecond)
 
 	for !terminate {
