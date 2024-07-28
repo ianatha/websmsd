@@ -21,9 +21,10 @@ func getEnv(key, defaultValue string) string {
 
 func main() {
 	AssertHuaweiModemMode()
-	log.Printf("Staring daemon at http://localhost:8080")
 	mon := NewMonitor(CommandPortPath, NotifyPortPath, DataPersistencePath)
+	log.Printf("Initialized modem")
 
+	log.Printf("Staring daemon at http://localhost:8080")
 	if err := mon.Run(); err != nil {
 		log.Fatalln(err)
 	}

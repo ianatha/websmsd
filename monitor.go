@@ -71,6 +71,7 @@ func (m *Monitor) Run() (err error) {
 		for {
 			<-m.checkTimer.C
 			if err := m.openDevice(); err != nil {
+				log.Println("failed to open device:", err)
 				m.checkTimer.Reset(DeviceCheckInterval)
 				continue
 			} else {

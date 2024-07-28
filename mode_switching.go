@@ -21,6 +21,7 @@ func (d USBDeviceType) String() string {
 }
 
 func runUSBModeSwitch() error {
+	log.Println("running mode switch")
 	cmd := exec.Command("usb_modeswitch", "-v", "0x12d1", "-p", "0x1f01", "-V", "0x12d1", "-P", "0x1001", "-M", "55534243000000000000000000000611060000000000000000000000000000")
 	err := cmd.Run()
 	if err != nil {
@@ -37,8 +38,6 @@ func checkUSBDeviceType() USBDeviceType {
 		"12d1:1f01": STORAGE,
 		"12d1:1001": MODEM,
 	}
-
-	defer ctx.Close()
 
 	var result USBDeviceType = NOT_FOUND
 	_, err := ctx.OpenDevices(func(desc *gousb.DeviceDesc) bool {
@@ -61,5 +60,12 @@ func AssertHuaweiModemMode() {
 	if checkUSBDeviceType() == STORAGE {
 		log.Println("detected Huawei modem in STORAGE mode; switching to MODEM mode")
 		runUSBModeSwitch()
+		return
 	}
+	if checkUSBDeviceType() == MODEM {
+		log.Println("Huawei modem is in MODEM mode")
+		return
+	}
+	log.Println("no device found")
+	return
 }
